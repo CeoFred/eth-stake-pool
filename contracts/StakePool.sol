@@ -72,25 +72,22 @@ contract ETHPool {
         // calculate percentage of stake in pool;
 
         uint reward;
+
         if(currentStake.amount % _totalStakesInPool > 0){
 
-          uint remainder = currentStake.amount % _totalStakesInPool;
-          uint percentage = remainder * 10;
+         uint percentage = currentStake.amount * 100 / _totalStakesInPool;
 
           if(percentage % 100 == 0){
             
             reward = percentage / 100 * rewardBalance;
-
           } else {
-            uint percentRemainder = percentage % 100;
-            reward = (percentRemainder  * rewardBalance)/10;
-          }
 
+            reward = (percentage  * rewardBalance) / 100;
+          }
         } else {
             uint percentage = (currentStake.amount / _totalStakesInPool).mul(100);
-
             if(percentage % 100 > 0){
-              reward =  (percentage % 100).mul(rewardBalance).div(10);
+              reward = (percentage  * rewardBalance) / 100;
             } else {
               reward = percentage.div(100).mul(rewardBalance);
             }
@@ -99,7 +96,6 @@ contract ETHPool {
 
         currentStake.reward = reward;
         currentStake.updatedAt = block.timestamp;
-
       }
     }
 
@@ -107,6 +103,29 @@ contract ETHPool {
     
   }
 
+  function withdrawStake(uint amount) external payable returns(bool){ 
+
+      require(amount > 0 wei, "Send a valid amount to deposit");
+      
+      Stake storage currentStake = stakes[msg.sender];
+
+      if(currentStake.isValid){
+        uint rewardPercent = amount * 100 / currentStake.amount;
+        uint reward = rewardPercent * currentStake.reward / 100;
+        uint totalFunds = reward + amount;
+        
+        (bool sent, ) = payable(msg.sender).call{value: totalFunds}("");
+        require(sent, "Failed to send Ether");
+        currentStake.reward = currentStake.reward - reward;
+        currentStake.amount = currentStake.amount - amount;
+        currentStake.isValid = currentStake.amount > 0;
+
+        _balances[msg.sender] = currentStake.amount;
+        rewardBalance = rewardBalance - reward;
+        _totalStakesInPool = _totalStakesInPool - amount;
+        return true;
+      } return false;
+  }
 
   function stakeEth() external  payable {
       uint256 amount = msg.value;
