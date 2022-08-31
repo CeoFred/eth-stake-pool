@@ -67,16 +67,38 @@ contract ETHPool {
     for (uint index = 0; index < stakeholders.length; index++) {
       address userAddress = stakeholders[index];
       Stake storage currentStake = stakes[userAddress];
+
       if(currentStake.isValid){
         // calculate percentage of stake in pool;
 
-        uint percentStakeInPool =  (currentStake.amount % rewardBalance) * 100;
-        uint reward = (percentStakeInPool / (100)).mul(rewardBalance);
+        uint reward;
+        if(currentStake.amount % _totalStakesInPool > 0){
 
-        currentStake.reward = percentStakeInPool;
+          uint remainder = currentStake.amount % _totalStakesInPool;
+          uint percentage = remainder * 10;
+
+          if(percentage % 100 == 0){
+            
+            reward = percentage / 100 * rewardBalance;
+
+          } else {
+            uint percentRemainder = percentage % 100;
+            reward = (percentRemainder  * rewardBalance)/10;
+          }
+
+        } else {
+            uint percentage = (currentStake.amount / _totalStakesInPool).mul(100);
+
+            if(percentage % 100 > 0){
+              reward =  (percentage % 100).mul(rewardBalance).div(10);
+            } else {
+              reward = percentage.div(100).mul(rewardBalance);
+            }
+
+        }
+
+        currentStake.reward = reward;
         currentStake.updatedAt = block.timestamp;
-
-        console.log(currentStake.amount,rewardBalance, (currentStake.amount/rewardBalance) * 10 ** 18);
 
       }
     }

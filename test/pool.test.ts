@@ -73,16 +73,19 @@ describe('ETHPool', () => {
     it('Should deposit reward', async () => {
 
       await pool.connect(staker).stakeEth({ value: 500, from: staker.address })
+      await pool.connect(staker2).stakeEth({ value: 500, from: staker2.address })
+
+
+      const totalStakes = await pool._totalStakesInPool()
+      expect(totalStakes).to.be.eq(1000)
 
       const [initialReward] = await pool.getStake(staker.address);
 
-      await expect(pool.connect(deployer).depositReward({ value: 1000, from: deployer.address })).to.emit(pool, 'RewardDeposited').withArgs( 1000, deployer.address)
+      await expect(pool.connect(deployer).depositReward({ value: 800, from: deployer.address })).to.emit(pool, 'RewardDeposited').withArgs( 800, deployer.address)
 
-      const totalReward = await pool.rewardBalance()
-      expect(totalReward).to.be.eq(1000);
 
       const [postReward,amount,isValid,updatedAt] = await pool.getStake(staker.address)
-      console.log(Number(postReward), updatedAt, isValid, amount)
+      console.log(Number(postReward))
       // console.log(initialReward, stakedAmount, stakeValid)
 
     })
