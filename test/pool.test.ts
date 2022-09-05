@@ -66,6 +66,14 @@ describe('ETHPool', () => {
       )
     })
 
+    it('Should fail due to timestamp', async () => {
+      await pool.connect(deployer).depositReward({ value: 1500, from: deployer.address })
+
+      await expect(pool.depositReward({ value: 1500, from: deployer.address })).to.be.revertedWith(
+        'Wrong time to desposit reward',
+      )
+    })
+
     it('Should deposit reward', async () => {
       await pool.connect(staker).stakeEth({ value: 1500, from: staker.address })
       await pool.connect(staker2).stakeEth({ value: 500, from: staker2.address })
@@ -155,5 +163,61 @@ describe('ETHPool', () => {
         'You must be a team member',
       )
     })
+  })
+
+  describe('Pull Funds', async () => {
+
+    it('Should fail to pull funds due to invalid amount', async () => {
+       expect(pool.connect(deployer).pullFunds(0, 1)).to.be.revertedWith('Send a valid amount to deposit')
+    });
+
+    it('Should faill to pull funds due to no access', async () => {
+      expect(pool.connect(staker).pullFunds(0, 1)).to.be.revertedWith('You must be a team member')
+    })
+
+    it('Should faill to pull funds due to insufficient funds', async () => {
+
+      pool.connect(deployer).depositReward({ value: ethers.utils.parseEther('60')})
+      expect(pool.pullFunds(ethers.utils.parseEther('65'), 1)).to.be.revertedWith('Insufficient funds')
+    })
+
+     it('Should fail to pull funds due to insufficient _totalStakesInPool funds', async () => {
+       await pool.connect(deployer).depositReward({ value: ethers.utils.parseEther('65') })
+       pool.stakeEth({ value: ethers.utils.parseEther('65') })
+
+       await expect(pool.pullFunds(ethers.utils.parseEther('66'), 1)).to.be.revertedWith('_totalStakesInPool Underflow')
+     })
+
+     it('Should fail to pull funds due to insufficient rewardBalance funds', async () => {
+       await pool.connect(deployer).depositReward({ value: ethers.utils.parseEther('65') })
+       await pool.stakeEth({ value: ethers.utils.parseEther('65') })
+
+       await expect(pool.pullFunds(ethers.utils.parseEther('66'), 0)).to.be.revertedWith('rewardBalance Underflow')
+     });
+
+     it('Should pull funds from rewardBalance funds', async () => {
+      await pool.connect(deployer).depositReward({ value: ethers.utils.parseEther('65') })
+       
+      await pool.stakeEth({ value: ethers.utils.parseEther('65') })
+
+       await pool.pullFunds(ethers.utils.parseEther('60'), 1)
+     })
+
+      it('Should pull funds from _totalStakesInPool funds', async () => {
+        await pool.connect(deployer).depositReward({ value: ethers.utils.parseEther('65') })
+
+        await pool.stakeEth({ value: ethers.utils.parseEther('65') })
+
+        await pool.pullFunds(ethers.utils.parseEther('60'), 0)
+      })
+
+       it('Should fail to pull funds from _totalStakesInPool funds due to invalid fund type', async () => {
+         await pool.connect(deployer).depositReward({ value: ethers.utils.parseEther('65') })
+
+         await pool.stakeEth({ value: ethers.utils.parseEther('65') })
+
+         await expect(pool.pullFunds(ethers.utils.parseEther('60'), 5)).to.be.revertedWith('Invalid fund type')
+       })
+
   })
 })

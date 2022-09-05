@@ -4,7 +4,7 @@ import { ethers } from 'hardhat'
 async function main() {
 
   const provider = ethers.provider
-  const contractBalance = await provider.getBalance('0x970ed205BBBe8d57159F0B8155E1a9eC295B72fa')
+  const contractBalance = await provider.getBalance('0x014E70E7609324cA838c34f77e29C199cb017274')
 
   console.log('contract balance', Number(contractBalance)," wei")
 }

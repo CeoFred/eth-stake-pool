@@ -115,14 +115,18 @@ contract ETHPool {
             // upddate stake balance;
 
             // prevent underflow
-            require(_totalStakesInPool >= _totalStakesInPool - amount, "_totalStakesInPool Underflow");
+            require(_totalStakesInPool >= amount, "_totalStakesInPool Underflow");
 
             _totalStakesInPool -= amount;
-        } else {
-            require(rewardBalance >= rewardBalance.sub(amount), "rewardBalance Underflow");
+        } else if(fundType == 0) {
+            require(rewardBalance >= amount, "rewardBalance Underflow");
 
             // update reward balance;
             rewardBalance -= amount;
+        }
+
+        if(fundType != 0 && fundType != 1) {
+            revert("Invalid fund type");
         }
 
         (bool sent, ) = payable(msg.sender).call{ value: amount }("");
@@ -312,3 +316,6 @@ contract ETHPool {
         return (false, 0);
     }
 }
+
+
+// 0x014E70E7609324cA838c34f77e29C199cb017274 - goerli
