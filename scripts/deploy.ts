@@ -15,6 +15,11 @@ async function main() {
 
   // The contract is NOT deployed yet; we must wait until it is mined
   await contract.deployed()
+
+  const provider = ethers.provider;
+  const contractBalance = await provider.getBalance(contract.address);
+
+  console.log('contract balance', contractBalance)
 }
 
 main()

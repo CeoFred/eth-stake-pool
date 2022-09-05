@@ -23,7 +23,8 @@
     "security": "scripts/security",
     "flatten": "scripts/flatten",
     "verify": "hardhat verify",
-    "deploy:hardhat": "hardhat run scripts/deploy.ts"
+    "deploy:hardhat": "hardhat run scripts/deploy.ts --network goerli",
+    "balance": "hardhat run scripts/getBalance.ts --network goerli"
   },
   "files": [
     "dist/**/*",
